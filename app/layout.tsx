@@ -14,7 +14,7 @@ const spaceGrotesk = Space_Grotesk({
 })
 
 export const metadata: Metadata = {
-  title: 'Ludothèque — ma collection de jeux',
+  title: 'PLAYED — ma collection de jeux',
   description:
     'Note, classe et garde une mémoire de tous les jeux auxquels tu as joué. Ta bibliothèque de jeux, façon Letterboxd.',
   generator: 'v0.app',
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   colorScheme: 'dark',
-  themeColor: '#141419',
+  themeColor: '#09090b',
   maximumScale: 1,
   userScalable: false,
 }
@@ -35,9 +35,10 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
+      suppressHydrationWarning
       className={`dark ${geist.variable} ${spaceGrotesk.variable} bg-background`}
     >
-      <body className="font-sans antialiased">
+      <body suppressHydrationWarning className="font-sans antialiased">
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

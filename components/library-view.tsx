@@ -4,7 +4,9 @@ import { useMemo, useState } from 'react'
 import { Search, Heart, Library } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { GameCover } from '@/components/game-cover'
-import { RatingBadge, StarRating } from '@/components/star-rating'
+import { StarRating } from '@/components/star-rating'
+import { StatusBadge } from '@/components/status-badge'
+import { formatGamePlatforms } from '@/lib/platforms'
 import { STATUS_META, STATUS_ORDER, type Game, type GameStatus } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -39,7 +41,7 @@ export function LibraryView({
       if (!q) return true
       return (
         g.title.toLowerCase().includes(q) ||
-        (g.platform ?? '').toLowerCase().includes(q)
+        formatGamePlatforms(g.platforms).toLowerCase().includes(q)
       )
     })
   }, [games, query, filter])
@@ -47,19 +49,11 @@ export function LibraryView({
   const filters: Filter[] = ['all', ...STATUS_ORDER]
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="relative">
-        <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Rechercher un jeu, une plateforme…"
-          className="glass h-11 rounded-full border-0 pl-10 shadow-none"
-        />
-      </div>
-
-      <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
-        {filters.map((f) => {
+    <div className="flex flex-col gap-5">
+      <div className="flex items-center gap-3">
+        {/* Filtres d'onglets compacts et secondaires */}
+        <div className="no-scrollbar -mx-4 flex-1 flex gap-1.5 overflow-x-auto px-4 pb-0.5">
+          {filters.map((f) => {
           const active = filter === f
           const label = f === 'all' ? 'Tous' : STATUS_META[f].short
           return (
@@ -67,53 +61,53 @@ export function LibraryView({
               key={f}
               onClick={() => setFilter(f)}
               className={cn(
-                'flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium ring-1 ring-inset transition-colors',
+                'flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-200 ease-out',
                 active
-                  ? 'bg-primary text-primary-foreground ring-primary'
-                  : 'bg-card/40 text-muted-foreground ring-border/60 hover:text-foreground',
+                  ? 'bg-white/10 text-foreground ring-1 ring-white/15'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
               )}
             >
               {label}
-              <span
-                className={cn(
-                  'font-display text-xs',
-                  active ? 'text-primary-foreground/80' : 'text-muted-foreground/70',
-                )}
-              >
-                {counts[f]}
-              </span>
             </button>
           )
-        })}
+            })}
+          </div>
+
+        {/* Barre de Recherche */}
+        <div className="relative group shrink-0">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/40 transition-colors group-focus-within:text-primary/60" />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Chercher…"
+            className="h-8 w-32 rounded-full border-white/[0.04] bg-white/[0.01] pl-8 pr-3 text-[11px] shadow-none transition-all duration-300 focus:w-48 focus:border-white/[0.1] focus:bg-white/[0.03] focus:ring-0"
+          />
+        </div>
       </div>
 
       {filtered.length === 0 ? (
         <EmptyState hasGames={games.length > 0} />
       ) : (
+        /* Grille de jaquettes au centre de l'expérience */
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
           {filtered.map((g) => (
             <button
               key={g.id}
               onClick={() => onOpen(g)}
               aria-label={`Ouvrir ${g.title}`}
-              className="group relative overflow-hidden rounded-xl outline-none ring-primary/60 transition-transform duration-200 focus-visible:ring-2 active:scale-[0.98]"
+              className="group relative overflow-hidden rounded-xl outline-none transition-transform duration-200 ease-out hover:scale-[1.03] focus-visible:ring-2 focus-visible:ring-white/20 active:scale-95"
             >
               <GameCover src={g.cover} title={g.title} />
 
               {g.favorite && (
-                <span className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-full bg-background/70 backdrop-blur-md">
+                <span className="absolute right-1.5 top-1.5 flex size-7 items-center justify-center rounded-full bg-black/45 backdrop-blur-md">
                   <Heart className="size-3.5 text-primary" fill="currentColor" />
                 </span>
               )}
-              {g.rating !== undefined && (
-                <span className="absolute left-1.5 top-1.5 opacity-100 transition-opacity duration-200 group-hover:opacity-0">
-                  <RatingBadge value={g.rating} />
-                </span>
-              )}
 
-              {/* Overlay premium révélé au survol / focus */}
-              <div className="pointer-events-none absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-background via-background/70 to-transparent p-2.5 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
-                <p className="line-clamp-2 text-left text-xs font-semibold leading-tight text-foreground">
+              {/* Overlay d'information haut de gamme au survol */}
+              <div className="pointer-events-none absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/95 via-black/50 to-transparent p-3 opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100 group-focus-visible:opacity-100 group-active:opacity-100">
+                <p className="line-clamp-2 text-left text-[11px] font-bold leading-tight text-white">
                   {g.title}
                 </p>
                 {g.rating !== undefined && (
@@ -121,13 +115,11 @@ export function LibraryView({
                     <StarRating value={g.rating} size="sm" />
                   </div>
                 )}
-                <div className="mt-1.5 flex items-center gap-1.5">
-                  <span
-                    className={cn('size-1.5 rounded-full', STATUS_META[g.status].dot)}
+                <div className="mt-1.5">
+                  <StatusBadge
+                    status={g.status}
+                    className="bg-white/10 text-white ring-white/15 py-0.5 text-[9px]"
                   />
-                  <span className="text-[11px] font-medium text-muted-foreground">
-                    {STATUS_META[g.status].short}
-                  </span>
                 </div>
               </div>
             </button>
@@ -140,15 +132,23 @@ export function LibraryView({
 
 function EmptyState({ hasGames }: { hasGames: boolean }) {
   return (
-    <div className="glass flex flex-col items-center justify-center gap-3 rounded-2xl py-16 text-center">
-      <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-        <Library className="size-6 text-muted-foreground" />
+    <div className="relative overflow-hidden rounded-2xl border border-white/[0.04] bg-white/[0.01] px-6 py-16 text-center shadow-2xl">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.015)_0%,transparent_100%)] pointer-events-none" />
+      <div className="relative flex flex-col items-center justify-center gap-4 max-w-sm mx-auto">
+        <div className="flex size-14 items-center justify-center rounded-full bg-white/[0.01] border border-white/[0.05] shadow-inner">
+          <Library className="size-6 text-muted-foreground/60" />
+        </div>
+        <div className="space-y-1.5">
+          <h3 className="font-display text-base font-bold tracking-tight text-foreground/90">
+            {hasGames ? 'Aucun résultat' : '« Ta collection commence ici. »'}
+          </h3>
+          <p className="text-xs text-muted-foreground/70 leading-relaxed">
+            {hasGames
+              ? 'Aucun jeu ne correspond à vos filtres ou à votre recherche actuelle.'
+              : 'Consigne tes sessions de jeu, attribue des notes détaillées à tes coups de cœur et compose ton classement ultime.'}
+          </p>
+        </div>
       </div>
-      <p className="text-sm text-muted-foreground">
-        {hasGames
-          ? 'Aucun jeu dans cette catégorie.'
-          : 'Ta ludothèque est vide. Ajoute ton premier jeu !'}
-      </p>
     </div>
   )
 }

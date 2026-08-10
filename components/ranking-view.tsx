@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import { GameCover } from '@/components/game-cover'
 import { RatingBadge } from '@/components/star-rating'
+import { formatGamePlatforms } from '@/lib/platforms'
 import type { Game } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -95,8 +96,10 @@ export function RankingView({
                     {g.title}
                   </span>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    {g.platform && (
-                      <span className="line-clamp-1">{g.platform}</span>
+                    {formatGamePlatforms(g.platforms) && (
+                      <span className="line-clamp-1">
+                        {formatGamePlatforms(g.platforms)}
+                      </span>
                     )}
                     {g.rating !== undefined && <RatingBadge value={g.rating} />}
                   </div>

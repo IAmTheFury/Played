@@ -3,10 +3,11 @@ export type GameStatus = 'playing' | 'completed' | 'backlog' | 'abandoned'
 export type Game = {
   id: string
   title: string
-  year?: string
+  /** @deprecated Conservé pour migration — préférer `platforms`. */
   platform?: string
+  platforms?: string[]
   cover?: string
-  /** Note personnelle sur 10 (par pas de 0,5). undefined = non noté. */
+  /** Note interne sur 10 (pas de 0,5) — affichée sur 5 étoiles. */
   rating?: number
   review?: string
   favorite: boolean
@@ -55,8 +56,8 @@ export const STATUS_META: Record<
 }
 
 export const STATUS_ORDER: GameStatus[] = [
-  'playing',
   'completed',
+  'playing',
   'backlog',
   'abandoned',
 ]

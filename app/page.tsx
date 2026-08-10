@@ -23,6 +23,11 @@ export default function Page() {
   const ludo = useLudo()
   const [tab, setTab] = useState<Tab>('library')
 
+  const completedCount = useMemo(
+    () => ludo.games.filter((g) => g.status === 'completed').length,
+    [ludo.games],
+  )
+
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Game | null>(null)
   const [detailId, setDetailId] = useState<string | null>(null)
@@ -60,13 +65,19 @@ export default function Page() {
   return (
     <div className="app-gradient min-h-dvh">
       <div className="mx-auto flex min-h-dvh max-w-2xl flex-col">
-        <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border/40 bg-background/70 px-4 py-2.5 backdrop-blur-xl">
-          <div className="flex items-baseline gap-2">
-            <p className="font-display text-base font-semibold tracking-tight">
-              Ludothèque
-            </p>
-            <p className="text-xs text-muted-foreground">
+        <header className="sticky top-0 z-20 flex items-center justify-between gap-3 px-4 py-2.5 backdrop-blur-xl"
+          style={{
+            borderBottom: '1px solid rgb(255 255 255 / 0.06)',
+            background: 'rgb(9 9 11 / 0.72)',
+          }}
+        >
+            <div className="flex items-baseline gap-2">
+              <p className="font-display text-base font-semibold tracking-tight">
+                PLAYED
+              </p>
+              <p className="text-xs text-muted-foreground">
               {ludo.games.length} jeu{ludo.games.length > 1 ? 'x' : ''}
+              {completedCount > 0 && `, ${completedCount} terminé${completedCount > 1 ? 's' : ''}`}
             </p>
           </div>
           <button
@@ -102,7 +113,13 @@ export default function Page() {
           )}
         </main>
 
-        <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border/60 bg-background/80 backdrop-blur-xl">
+        <nav
+          className="fixed inset-x-0 bottom-0 z-20 backdrop-blur-xl"
+          style={{
+            borderTop: '1px solid rgb(255 255 255 / 0.06)',
+            background: 'rgb(9 9 11 / 0.82)',
+          }}
+        >
           <div className="mx-auto flex max-w-2xl items-stretch justify-around px-2 py-2">
             {TABS.map(({ id, label, icon: Icon }) => {
               const active = tab === id
@@ -111,7 +128,7 @@ export default function Page() {
                   key={id}
                   onClick={() => setTab(id)}
                   className={cn(
-                    'flex flex-1 flex-col items-center gap-1 rounded-xl py-2 text-xs font-medium transition-colors',
+                    'flex flex-1 flex-col items-center gap-1 rounded-xl py-2.5 text-xs font-medium transition-all duration-200 ease-out active:scale-95',
                     active
                       ? 'text-primary'
                       : 'text-muted-foreground hover:text-foreground',
@@ -136,6 +153,7 @@ export default function Page() {
         platforms={ludo.platforms}
         game={editing}
         onSubmit={handleSubmit}
+        onRemovePlatform={ludo.removePlatform}
       />
 
       <GameDetailDialog

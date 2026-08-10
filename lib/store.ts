@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { DEFAULT_PLATFORM_CHIPS } from './platforms'
 import type { Game, Ludo } from './types'
 
 const STORAGE_KEY = 'ludo:v1'
@@ -8,18 +9,38 @@ const STORAGE_KEY = 'ludo:v1'
 const DEFAULT: Ludo = {
   games: [],
   ranking: [],
-  platforms: [
-    'PC',
-    'PlayStation 5',
-    'Nintendo Switch',
-    'Nintendo GameCube',
-    'Nintendo 64',
-  ],
+  platforms: [...DEFAULT_PLATFORM_CHIPS],
   profileName: 'Mon profil',
 }
 
 function uid() {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36)
+}
+
+function normalizeGame(raw: Game): Game {
+  const platforms =
+    raw.platforms?.length
+      ? raw.platforms
+      : raw.platform
+        ? [raw.platform]
+        : undefined
+  const { platform: _legacy, ...rest } = raw
+  return platforms ? { ...rest, platforms } : rest
+}
+
+function mergePlatforms(existing: string[], incoming?: string[]) {
+  if (!incoming?.length) return existing
+  const next = [...existing]
+  for (const p of incoming) {
+    const trimmed = p.trim()
+    if (
+      trimmed &&
+      !next.some((x) => x.toLowerCase() === trimmed.toLowerCase())
+    ) {
+      next.push(trimmed)
+    }
+  }
+  return next
 }
 
 function load(): Ludo {
@@ -29,7 +50,7 @@ function load(): Ludo {
     if (!raw) return DEFAULT
     const parsed = JSON.parse(raw) as Partial<Ludo>
     return {
-      games: parsed.games ?? [],
+      games: (parsed.games ?? []).map((g) => normalizeGame(g as Game)),
       ranking: parsed.ranking ?? [],
       platforms: parsed.platforms?.length ? parsed.platforms : DEFAULT.platforms,
       profileName: parsed.profileName ?? DEFAULT.profileName,
@@ -59,44 +80,36 @@ export function useLudo() {
     }
   }, [data, loaded])
 
-  const rememberPlatform = useCallback((platform?: string) => {
-    setData((d) => {
-      const p = platform?.trim()
-      if (!p || d.platforms.some((x) => x.toLowerCase() === p.toLowerCase())) {
-        return d
-      }
-      return { ...d, platforms: [...d.platforms, p] }
-    })
-  }, [])
-
   const addGame = useCallback((game: NewGame) => {
     const now = Date.now()
-    const full: Game = { ...game, id: uid(), createdAt: now, updatedAt: now }
-    setData((d) => {
-      const platforms =
-        full.platform &&
-        !d.platforms.some((x) => x.toLowerCase() === full.platform!.toLowerCase())
-          ? [...d.platforms, full.platform]
-          : d.platforms
-      return { ...d, games: [full, ...d.games], platforms }
+    const full: Game = normalizeGame({
+      ...game,
+      id: uid(),
+      createdAt: now,
+      updatedAt: now,
     })
+    setData((d) => ({
+      ...d,
+      games: [full, ...d.games],
+      platforms: mergePlatforms(d.platforms, full.platforms),
+    }))
     return full.id
   }, [])
 
   const updateGame = useCallback((id: string, patch: Partial<NewGame>) => {
     setData((d) => {
-      const platforms =
-        patch.platform &&
-        !d.platforms.some(
-          (x) => x.toLowerCase() === patch.platform!.toLowerCase(),
-        )
-          ? [...d.platforms, patch.platform]
-          : d.platforms
+      const platforms = mergePlatforms(d.platforms, patch.platforms)
       return {
         ...d,
         platforms,
         games: d.games.map((g) =>
-          g.id === id ? { ...g, ...patch, updatedAt: Date.now() } : g,
+          g.id === id
+            ? normalizeGame({
+                ...g,
+                ...patch,
+                updatedAt: Date.now(),
+              })
+            : g,
         ),
       }
     })
@@ -153,6 +166,13 @@ export function useLudo() {
     setData((d) => ({ ...d, profileName }))
   }, [])
 
+  const removePlatform = useCallback((platform: string) => {
+    setData((d) => ({
+      ...d,
+      platforms: d.platforms.filter((p) => p !== platform),
+    }))
+  }, [])
+
   return {
     ...data,
     loaded,
@@ -160,11 +180,11 @@ export function useLudo() {
     updateGame,
     removeGame,
     toggleFavorite,
-    rememberPlatform,
     setRanking,
     moveInRanking,
     addToRanking,
     removeFromRanking,
     setProfileName,
+    removePlatform,
   }
 }
