@@ -1,32 +1,53 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import { Check, Heart, Pencil } from 'lucide-react'
+import { useMemo, useState, useRef, useCallback } from 'react'
+import { Check, Heart, Pencil, Download, Upload, Plus, X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import { Reorder } from 'framer-motion'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { GameCover } from '@/components/game-cover'
 import { RatingBadge, formatRating10 } from '@/components/star-rating'
 import { ShareTopButton, ShareTopModal } from '@/components/share-top-modal'
 import { StatusBadge } from '@/components/status-badge'
-import type { Game } from '@/lib/types'
-import { cn } from '@/lib/utils'
+import type { Game, Ludo } from '@/lib/types'
+import { cn, getCroppedImgDataURL } from '@/lib/utils'
+import Cropper from 'react-easy-crop'
 
 export function ProfileView({
   games,
   ranking,
   profileName,
+  profileImage,
   onRename,
+  onSetProfileImage,
+  onSetRanking,
+  onImport,
   onOpen,
 }: {
   games: Game[]
   ranking: string[]
   profileName: string
+  profileImage?: string
   onRename: (name: string) => void
+  onSetProfileImage: (image?: string) => void
+  onSetRanking: (ranking: string[]) => void
+  onImport: (data: Partial<Ludo>) => void
   onOpen: (game: Game) => void
 }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(profileName)
   const [shareOpen, setShareOpen] = useState(false)
   const [bannerErrored, setBannerErrored] = useState(false)
+
+  // Profile Image State
+  const [cropOpen, setCropOpen] = useState(false)
+  const [tempImage, setTempImage] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [crop, setCrop] = useState({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
+  const [minZoom, setMinZoom] = useState(0.5)
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
 
   const byId = useMemo(() => new Map(games.map((g) => [g.id, g])), [games])
 
@@ -75,6 +96,71 @@ export function ProfileView({
     setEditing(false)
   }
 
+  // Import / Export Logic
+  function handleExport() {
+    const data = {
+      games,
+      ranking,
+      profileName,
+      profileImage,
+      platforms: Array.from(new Set(games.flatMap(g => g.platforms || [])))
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `played-profile-${new Date().toISOString().split('T')[0]}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target?.result as string)
+        onImport(data)
+      } catch (err) {
+        alert("Erreur lors de l'importation du fichier.")
+      }
+    }
+    reader.readAsText(file)
+  }
+
+  // Profile Image Logic
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      setTempImage(event.target?.result as string)
+      setZoom(1)
+      setCrop({ x: 0, y: 0 })
+      setCroppedAreaPixels(null)
+      setCropOpen(true)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const onCropComplete = useCallback((croppedArea: any, croppedAreaPixels: any) => {
+    setCroppedAreaPixels(croppedAreaPixels)
+  }, [])
+
+  async function handleSaveCrop() {
+    if (!tempImage || !croppedAreaPixels) return
+
+    try {
+      const croppedDataUrl = await getCroppedImgDataURL(tempImage, croppedAreaPixels, 400)
+      onSetProfileImage(croppedDataUrl)
+      setCropOpen(false)
+    } catch (error) {
+      console.error('Error cropping image:', error)
+      alert("Une erreur s'est produite lors du rognage de l'image.")
+    }
+  }
+
   return (
     <div className="flex flex-col gap-8">
       {/* Bannière profil */}
@@ -95,8 +181,25 @@ export function ProfileView({
         </div>
 
         <div className="relative flex items-end gap-4 px-4 pb-5 pt-16">
-          <div className="flex size-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/60 font-display text-2xl font-bold text-primary-foreground shadow-lg shadow-primary/25 ring-2 ring-white/10">
-            {initial}
+          <div 
+            className="group relative flex size-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/60 font-display text-3xl font-bold text-primary-foreground shadow-lg shadow-primary/25 ring-2 ring-white/10 overflow-hidden cursor-pointer"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {profileImage ? (
+              <img src={profileImage} alt="" className="h-full w-full object-cover" />
+            ) : (
+              initial
+            )}
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+              <Plus className="size-8 text-white" />
+            </div>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              className="hidden" 
+              accept="image/*" 
+              onChange={handleFileChange} 
+            />
           </div>
           <div className="min-w-0 flex-1 pb-0.5">
             {editing ? (
@@ -146,35 +249,72 @@ export function ProfileView({
         </div>
       </div>
 
-      <Section title="Mon top">
+      <Section 
+        title={
+          <div className="flex items-center justify-between w-full">
+            <span>Mon top</span>
+            <div className="flex gap-2">
+              <Button 
+                variant="ghost" 
+                size="icon-sm" 
+                onClick={handleExport}
+                title="Exporter les données"
+                className="h-7 w-7 text-muted-foreground"
+              >
+                <Download className="size-4" />
+              </Button>
+              <label className="cursor-pointer">
+                <div className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-accent text-muted-foreground">
+                  <Upload className="size-4" />
+                </div>
+                <input type="file" className="hidden" accept=".json" onChange={handleImport} />
+              </label>
+            </div>
+          </div>
+        }
+      >
         {top.length === 0 ? (
           <EmptyHint text="Ajoute des jeux à ton classement ou marque des favoris pour composer ton top." />
         ) : (
-          <div className="grid grid-cols-4 gap-2.5">
+          <Reorder.Group
+            axis="x"
+            values={top}
+            onReorder={(newTop) => {
+              onSetRanking(newTop.map(g => g.id))
+            }}
+            className="grid grid-cols-4 gap-2.5"
+            as="div"
+          >
             {top.map((g, i) => (
-              <button
+              <Reorder.Item
                 key={g.id}
-                onClick={() => onOpen(g)}
-                className="group relative transition-all duration-200 ease-out hover:scale-[1.02] active:scale-95"
+                value={g}
+                as="div"
+                className="relative cursor-grab active:cursor-grabbing select-none"
               >
-                <GameCover
-                  src={g.cover}
-                  title={g.title}
-                  className="transition-transform duration-200 group-hover:-translate-y-0.5"
-                />
-                <span
-                  className={cn(
-                    'absolute -left-1 -top-2 flex size-6 items-center justify-center rounded-full font-display text-xs font-bold ring-2 ring-[#09090b]',
-                    i === 0
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-white/10 text-foreground backdrop-blur-md',
-                  )}
+                <button
+                  onClick={() => onOpen(g)}
+                  className="group relative w-full transition-all duration-200 ease-out hover:scale-[1.02] active:scale-95"
                 >
-                  {i + 1}
-                </span>
-              </button>
+                  <GameCover
+                    src={g.cover}
+                    title={g.title}
+                    className="transition-transform duration-200 group-hover:-translate-y-0.5 pointer-events-none select-none"
+                  />
+                  <span
+                    className={cn(
+                      'absolute -left-1 -top-2 flex size-6 items-center justify-center rounded-full font-display text-xs font-bold ring-2 ring-[#09090b]',
+                      i === 0
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-white/10 text-foreground backdrop-blur-md',
+                    )}
+                  >
+                    {i + 1}
+                  </span>
+                </button>
+              </Reorder.Item>
             ))}
-          </div>
+          </Reorder.Group>
         )}
         <ShareTopButton
           onClick={() => setShareOpen(true)}
@@ -223,6 +363,59 @@ export function ProfileView({
         profileName={profileName}
         top={top}
       />
+
+      <Dialog open={cropOpen} onOpenChange={setCropOpen}>
+        <DialogContent className="sm:max-w-md bg-zinc-950 border-zinc-800">
+          <DialogHeader>
+            <DialogTitle>Ajuster la photo</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-6 py-4">
+            <div className="relative w-64 h-64 bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800">
+              {tempImage && (
+                <Cropper
+                  image={tempImage}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={1}
+                  cropShape="rect"
+                  minZoom={1}
+                  maxZoom={3}
+                  restrictPosition={true}
+                  onCropChange={setCrop}
+                  onZoomChange={setZoom}
+                  onCropComplete={onCropComplete}
+                  showGrid={false}
+                  classes={{
+                    containerClassName: "rounded-2xl",
+                    cropAreaClassName: "rounded-2xl",
+                    mediaClassName: "rounded-2xl"
+                  }}
+                />
+              )}
+            </div>
+            
+            <div className="w-full space-y-2">
+              <div className="flex justify-between text-xs text-zinc-400">
+                <span>Zoom</span>
+                <span>{Math.round(zoom * 100)}%</span>
+              </div>
+              <input 
+                type="range" 
+                min="1"
+                max="3" 
+                step="0.01" 
+                value={zoom} 
+                onChange={(e) => setZoom(parseFloat(e.target.value))}
+                className="w-full accent-primary"
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="ghost" onClick={() => setCropOpen(false)}>Annuler</Button>
+            <Button onClick={handleSaveCrop} disabled={!croppedAreaPixels}>Enregistrer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

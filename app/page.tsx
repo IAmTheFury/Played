@@ -1,9 +1,10 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Library, Trophy, User, Plus } from 'lucide-react'
+import { Home, Library, User, Plus } from 'lucide-react'
 import { useLudo, type NewGame } from '@/lib/store'
 import type { Game } from '@/lib/types'
+import { HomeView } from '@/components/home-view'
 import { LibraryView } from '@/components/library-view'
 import { RankingView } from '@/components/ranking-view'
 import { ProfileView } from '@/components/profile-view'
@@ -11,17 +12,17 @@ import { GameFormDialog } from '@/components/game-form-dialog'
 import { GameDetailDialog } from '@/components/game-detail-dialog'
 import { cn } from '@/lib/utils'
 
-type Tab = 'library' | 'ranking' | 'profile'
+type Tab = 'home' | 'library' | 'profile'
 
-const TABS: { id: Tab; label: string; icon: typeof Library }[] = [
-  { id: 'library', label: 'Bibliothèque', icon: Library },
-  { id: 'ranking', label: 'Classement', icon: Trophy },
+const TABS: { id: Tab; label: string; icon: typeof Home }[] = [
+  { id: 'home', label: 'Accueil', icon: Home },
+  { id: 'library', label: 'Collection', icon: Library },
   { id: 'profile', label: 'Profil', icon: User },
 ]
 
 export default function Page() {
   const ludo = useLudo()
-  const [tab, setTab] = useState<Tab>('library')
+  const [tab, setTab] = useState<Tab>('home')
 
   const completedCount = useMemo(
     () => ludo.games.filter((g) => g.status === 'completed').length,
@@ -91,23 +92,20 @@ export default function Page() {
         </header>
 
         <main className="flex-1 px-4 py-5 pb-28">
-          {!ludo.loaded ? null : tab === 'library' ? (
+          {!ludo.loaded ? null : tab === 'home' ? (
+            <HomeView games={ludo.games} onOpen={(g) => setDetailId(g.id)} />
+          ) : tab === 'library' ? (
             <LibraryView games={ludo.games} onOpen={(g) => setDetailId(g.id)} />
-          ) : tab === 'ranking' ? (
-            <RankingView
-              games={ludo.games}
-              ranking={ludo.ranking}
-              onMove={ludo.moveInRanking}
-              onRemove={ludo.removeFromRanking}
-              onAdd={ludo.addToRanking}
-              onOpen={(g) => setDetailId(g.id)}
-            />
           ) : (
             <ProfileView
               games={ludo.games}
               ranking={ludo.ranking}
               profileName={ludo.profileName}
+              profileImage={ludo.profileImage}
               onRename={ludo.setProfileName}
+              onSetProfileImage={ludo.setProfileImage}
+              onSetRanking={ludo.setRanking}
+              onImport={ludo.importData}
               onOpen={(g) => setDetailId(g.id)}
             />
           )}
@@ -126,6 +124,7 @@ export default function Page() {
               return (
                 <button
                   key={id}
+                  data-tab={id}
                   onClick={() => setTab(id)}
                   className={cn(
                     'flex flex-1 flex-col items-center gap-1 rounded-xl py-2.5 text-xs font-medium transition-all duration-200 ease-out active:scale-95',

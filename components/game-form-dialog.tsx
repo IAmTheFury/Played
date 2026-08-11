@@ -37,6 +37,7 @@ const empty: NewGame = {
   review: '',
   favorite: false,
   status: 'backlog',
+  playedYear: new Date().getFullYear(),
 }
 
 export function GameFormDialog({
@@ -65,6 +66,7 @@ export function GameFormDialog({
               review: game.review ?? '',
               favorite: game.favorite,
               status: game.status,
+              playedYear: game.playedYear,
             }
           : empty,
       )
@@ -82,6 +84,13 @@ export function GameFormDialog({
     setForm((f) => ({ ...f, [key]: value }))
 
   const canSubmit = form.title.trim().length > 0
+
+  // Génère les années de 1990 à l'année en cours
+  const currentYear = new Date().getFullYear()
+  const yearOptions = Array.from(
+    { length: currentYear - 1990 + 1 },
+    (_, i) => currentYear - i
+  )
 
   const platformChips = Array.from(
     new Set([
@@ -289,6 +298,48 @@ export function GameFormDialog({
                   Custom
                 </button>
               )}
+            </div>
+          </div>
+
+          <div className="grid gap-2">
+            <Label>Année jouée</Label>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative flex-1">
+                <select
+                  value={form.playedYear !== undefined ? form.playedYear.toString() : ''}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    set('playedYear', value === '' ? undefined : parseInt(value, 10))
+                  }}
+                  className="glass w-full cursor-pointer appearance-none rounded-lg border-0 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 text-foreground bg-transparent"
+                >
+                  <option value="" className="bg-card text-foreground">Je ne sais plus</option>
+                  {yearOptions.map((year) => (
+                    <option key={year} value={year} className="bg-card text-foreground hover:bg-accent">
+                      {year}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground">
+                  <svg
+                    className="size-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Laisse vide si tu ne te souviens plus
+              </div>
             </div>
           </div>
 

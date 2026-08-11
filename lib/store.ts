@@ -11,6 +11,7 @@ const DEFAULT: Ludo = {
   ranking: [],
   platforms: [...DEFAULT_PLATFORM_CHIPS],
   profileName: 'Mon profil',
+  profileImage: undefined,
 }
 
 function uid() {
@@ -54,6 +55,7 @@ function load(): Ludo {
       ranking: parsed.ranking ?? [],
       platforms: parsed.platforms?.length ? parsed.platforms : DEFAULT.platforms,
       profileName: parsed.profileName ?? DEFAULT.profileName,
+      profileImage: parsed.profileImage,
     }
   } catch {
     return DEFAULT
@@ -173,6 +175,23 @@ export function useLudo() {
     }))
   }, [])
 
+  const setProfileImage = useCallback((profileImage?: string) => {
+    setData((d) => ({ ...d, profileImage }))
+  }, [])
+
+  const importData = useCallback((incoming: Partial<Ludo>) => {
+    setData((d) => ({
+      ...d,
+      ...incoming,
+      // Ensure arrays are merged or overwritten correctly
+      games: incoming.games ?? d.games,
+      ranking: incoming.ranking ?? d.ranking,
+      platforms: mergePlatforms(d.platforms, incoming.platforms),
+      profileName: incoming.profileName ?? d.profileName,
+      profileImage: incoming.profileImage ?? d.profileImage,
+    }))
+  }, [])
+
   return {
     ...data,
     loaded,
@@ -186,5 +205,7 @@ export function useLudo() {
     removeFromRanking,
     setProfileName,
     removePlatform,
+    setProfileImage,
+    importData,
   }
 }

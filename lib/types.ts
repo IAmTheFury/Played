@@ -12,6 +12,8 @@ export type Game = {
   review?: string
   favorite: boolean
   status: GameStatus
+  /** Année où le jeu a été joué (optionnel) */
+  playedYear?: number
   createdAt: number
   updatedAt: number
 }
@@ -23,6 +25,7 @@ export type Ludo = {
   /** Plateformes déjà saisies, mémorisées pour l'autocomplétion. */
   platforms: string[]
   profileName: string
+  profileImage?: string
 }
 
 export const STATUS_META: Record<
