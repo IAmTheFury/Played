@@ -6,7 +6,6 @@ import { useLudo, type NewGame } from '@/lib/store'
 import type { Game } from '@/lib/types'
 import { HomeView } from '@/components/home-view'
 import { LibraryView } from '@/components/library-view'
-import { RankingView } from '@/components/ranking-view'
 import { ProfileView } from '@/components/profile-view'
 import { GameFormDialog } from '@/components/game-form-dialog'
 import { GameDetailDialog } from '@/components/game-detail-dialog'
@@ -77,10 +76,9 @@ export default function Page() {
                 PLAYED
               </p>
               <p className="text-xs text-muted-foreground">
-              {ludo.games.length} jeu{ludo.games.length > 1 ? 'x' : ''}
-              {completedCount > 0 && `, ${completedCount} terminé${completedCount > 1 ? 's' : ''}`}
-            </p>
-          </div>
+                — Ta collection. Ton histoire.
+              </p>
+            </div>
           <button
             onClick={openAdd}
             aria-label="Ajouter un jeu"

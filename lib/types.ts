@@ -14,6 +14,8 @@ export type Game = {
   status: GameStatus
   /** Année où le jeu a été joué (optionnel) */
   playedYear?: number
+  /** Timestamp de quand le jeu a été joué/terminé (optionnel, plus précis que playedYear) */
+  playedAt?: number
   createdAt: number
   updatedAt: number
 }
@@ -64,3 +66,29 @@ export const STATUS_ORDER: GameStatus[] = [
   'backlog',
   'abandoned',
 ]
+
+// Types préparatoires pour l'évolution future vers Game/Experience/Collection
+export interface GameIdentity {
+  id: string
+  title: string
+  platforms?: string[]
+  cover?: string
+}
+
+export interface GameExperience {
+  gameId: string
+  playedAt?: number
+  playedYear?: number
+  status: GameStatus
+  rating?: number
+  review?: string
+  createdAt: number
+  updatedAt: number
+}
+
+export interface CollectionEntry {
+  gameId: string
+  favorite: boolean
+  rankingPosition?: number
+  addedAt: number
+}

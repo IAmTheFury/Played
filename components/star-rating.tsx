@@ -102,11 +102,18 @@ export function StarRating({
 export function RatingBadge({
   value,
   className,
+  compact = false,
 }: {
   value?: number
   className?: string
+  compact?: boolean
 }) {
   if (value === undefined) return null
+  
+  if (compact) {
+    return <CompactRatingBadge value={value} className={className} />
+  }
+  
   return (
     <span
       className={cn(
@@ -117,6 +124,77 @@ export function RatingBadge({
     >
       <Star className="size-3 text-primary" fill="currentColor" strokeWidth={0} />
       {formatRatingFraction(value)}
+    </span>
+  )
+}
+
+function CompactRatingBadge({
+  value,
+  className,
+}: {
+  value: number
+  className?: string
+}) {
+  // Convertir la note sur 10 en note sur 5 étoiles
+  const starValue = value / 2 // 0-5
+  const fullStars = Math.floor(starValue)
+  const hasHalfStar = starValue % 1 >= 0.5
+  
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-full bg-black/70 px-2.5 py-1.5 font-display text-[11px] font-semibold text-foreground backdrop-blur-sm transition-all duration-200',
+        className,
+      )}
+      style={{ 
+        border: '1px solid rgb(255 255 255 / 0.1)',
+        boxShadow: '0 2px 8px -2px rgba(0, 0, 0, 0.3)'
+      }}
+    >
+      {/* Étoiles discrètes */}
+      <div className="flex items-center gap-0.5">
+        {[1, 2, 3, 4, 5].map((i) => {
+          if (i <= fullStars) {
+            return (
+              <Star
+                key={i}
+                className="size-2.5 text-primary transition-colors"
+                fill="currentColor"
+                strokeWidth={0}
+              />
+            )
+          } else if (i === fullStars + 1 && hasHalfStar) {
+            return (
+              <div key={i} className="relative size-2.5">
+                <Star
+                  className="size-2.5 text-white/20"
+                  fill="currentColor"
+                  strokeWidth={0}
+                />
+                <div className="absolute inset-0 overflow-hidden" style={{ width: '50%' }}>
+                  <Star
+                    className="size-2.5 text-primary"
+                    fill="currentColor"
+                    strokeWidth={0}
+                  />
+                </div>
+              </div>
+            )
+          } else {
+            return (
+              <Star
+                key={i}
+                className="size-2.5 text-white/20"
+                fill="currentColor"
+                strokeWidth={0}
+              />
+            )
+          }
+        })}
+      </div>
+      <span className="text-[11px] font-bold tracking-tight min-w-[14px] text-center">
+        {formatRating10(value)}
+      </span>
     </span>
   )
 }

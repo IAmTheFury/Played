@@ -78,7 +78,18 @@ export function ProfileView({
   }, [games, top, favorites])
 
   const recent = useMemo(
-    () => [...games].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 6),
+    () => {
+      // Ne prendre que les jeux avec playedAt défini
+      const gamesWithPlayedAt = games.filter(g => g.playedAt !== undefined)
+      
+      // Si aucun jeu n'a playedAt, retourner tableau vide
+      if (gamesWithPlayedAt.length === 0) return []
+      
+      // Trier par playedAt décroissant
+      return [...gamesWithPlayedAt]
+        .sort((a, b) => (b.playedAt ?? 0) - (a.playedAt ?? 0))
+        .slice(0, 6)
+    },
     [games],
   )
 
@@ -123,7 +134,11 @@ export function ProfileView({
         const data = JSON.parse(event.target?.result as string)
         onImport(data)
       } catch (err) {
-        alert("Erreur lors de l'importation du fichier.")
+        if (err instanceof Error && err.message.includes('Impossible d\'importer')) {
+          alert(err.message)
+        } else {
+          alert("Erreur lors de l'importation du fichier. Le fichier semble invalide ou incompatible.")
+        }
       }
     }
     reader.readAsText(file)

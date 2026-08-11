@@ -60,7 +60,6 @@ export function HomeView({ games, onOpen }: Props) {
         <p className="text-sm text-muted-foreground">
           {currentYearGames.length} jeu{currentYearGames.length > 1 ? 'x' : ''} joué{currentYearGames.length > 1 ? 's' : ''} cette année,
           dont {completedCurrentYearGames.length} terminé{completedCurrentYearGames.length > 1 ? 's' : ''}.
-          {averageRatingCurrentYear && ` Note moyenne : ${formatRating10(averageRatingCurrentYear)}/10.`}
         </p>
       </div>
     )
@@ -110,82 +109,7 @@ export function HomeView({ games, onOpen }: Props) {
 
   return (
     <div className="space-y-8 pb-8">
-      {/* 1. CONTINUER */}
-      {playingGames.length > 0 && (
-        <section className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Play className="size-5 text-chart-4" />
-            <h2 className="font-display text-xl font-semibold">Continuer</h2>
-          </div>
-          
-          {latestPlayingGame && (
-            <div 
-              className="glass rounded-2xl p-4 cursor-pointer transition-all hover:scale-[1.01] active:scale-95"
-              onClick={() => onOpen(latestPlayingGame)}
-            >
-              <div className="flex gap-4">
-                <div className="w-20 shrink-0">
-                  <GameCover src={latestPlayingGame.cover} title={latestPlayingGame.title} className="h-full" />
-                </div>
-                <div className="flex min-w-0 flex-1 flex-col gap-2">
-                  <h3 className="font-display text-lg font-semibold leading-tight">
-                    {latestPlayingGame.title}
-                  </h3>
-                  <StatusBadge status={latestPlayingGame.status} />
-                  {latestPlayingGame.platforms && latestPlayingGame.platforms.length > 0 && (
-                    <p className="text-sm text-muted-foreground">
-                      {formatGamePlatforms(latestPlayingGame.platforms)}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {otherPlayingGames.length > 0 && (
-            <div className="flex gap-3 overflow-x-auto pb-2 pt-2">
-              {otherPlayingGames.map(game => (
-                <div
-                  key={game.id}
-                  className="w-24 shrink-0 cursor-pointer transition-transform hover:scale-105 active:scale-95"
-                  onClick={() => onOpen(game)}
-                >
-                  <GameCover src={game.cover} title={game.title} />
-                  <p className="mt-2 truncate text-xs font-medium">{game.title}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-      )}
-
-      {/* 2. RÉCEMMENT */}
-      {recentGames.length > 0 && (
-        <section className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Calendar className="size-5 text-chart-2" />
-            <h2 className="font-display text-xl font-semibold">Récemment</h2>
-          </div>
-          
-          <div className="flex gap-3 overflow-x-auto pb-2">
-            {recentGames.map(game => (
-              <div
-                key={game.id}
-                className="w-24 shrink-0 cursor-pointer transition-transform hover:scale-105 active:scale-95"
-                onClick={() => onOpen(game)}
-              >
-                <GameCover src={game.cover} title={game.title} />
-                <p className="mt-2 truncate text-xs font-medium">{game.title}</p>
-                <div className="mt-1">
-                  <StatusBadge status={game.status} className="text-[10px] px-1.5 py-0.5" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* 3. TON ANNÉE */}
+      {/* 1. TON ANNÉE - maintenant en première position */}
       {showYearSection && (
         <section className="space-y-4">
           <div className="flex items-center gap-2">
@@ -201,7 +125,82 @@ export function HomeView({ games, onOpen }: Props) {
         </section>
       )}
 
-      {/* 4. TA COLLECTION */}
+      {/* 2. CONTINUER */}
+      {playingGames.length > 0 && (
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Play className="size-5 text-chart-4" />
+            <h2 className="font-display text-xl font-semibold">Continuer</h2>
+          </div>
+          
+          {latestPlayingGame && (
+            <div 
+              className="glass rounded-2xl p-4 cursor-pointer transition-all hover:scale-[1.01] active:scale-95"
+              onClick={() => onOpen(latestPlayingGame)}
+            >
+              <div className="flex gap-4">
+                <div className="w-16 shrink-0">
+                  <GameCover src={latestPlayingGame.cover} title={latestPlayingGame.title} className="h-full" />
+                </div>
+                <div className="flex min-w-0 flex-1 flex-col gap-2">
+                  <h3 className="font-display text-lg font-semibold leading-tight">
+                    {latestPlayingGame.title}
+                  </h3>
+                  <StatusBadge status={latestPlayingGame.status} className="text-xs px-2 py-0.5" />
+                  {latestPlayingGame.platforms && latestPlayingGame.platforms.length > 0 && (
+                    <p className="text-sm text-muted-foreground truncate">
+                      {formatGamePlatforms(latestPlayingGame.platforms)}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {otherPlayingGames.length > 0 && (
+            <div className="flex gap-3 overflow-x-auto pb-2 pt-2">
+              {otherPlayingGames.map(game => (
+                <div
+                  key={game.id}
+                  className="w-20 shrink-0 cursor-pointer transition-transform hover:scale-105 active:scale-95"
+                  onClick={() => onOpen(game)}
+                >
+                  <GameCover src={game.cover} title={game.title} />
+                  <p className="mt-1.5 truncate text-[11px] font-medium">{game.title}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* 3. RÉCEMMENT */}
+      {recentGames.length > 0 && (
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Calendar className="size-5 text-chart-2" />
+            <h2 className="font-display text-xl font-semibold">Récemment</h2>
+          </div>
+          
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {recentGames.map(game => (
+              <div
+                key={game.id}
+                className="w-20 shrink-0 cursor-pointer transition-transform hover:scale-105 active:scale-95"
+                onClick={() => onOpen(game)}
+              >
+                <GameCover src={game.cover} title={game.title} />
+                <p className="mt-1.5 truncate text-[11px] font-medium">{game.title}</p>
+                <div className="mt-1">
+                  <StatusBadge status={game.status} className="text-[10px] px-1 py-0.5" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* 4. TA COLLECTION - jaquettes réduites */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -221,7 +220,7 @@ export function HomeView({ games, onOpen }: Props) {
           </button>
         </div>
         
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-4 gap-2.5">
           {collectionPreview.map(game => (
             <div
               key={game.id}
