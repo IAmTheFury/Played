@@ -112,13 +112,6 @@ export function HomeView({ games, onOpen }: Props) {
       {/* 1. TON ANNÉE - maintenant en première position */}
       {showYearSection && (
         <section className="space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="flex size-5 items-center justify-center rounded-full bg-primary/20">
-              <span className="text-xs font-semibold text-primary">{currentYear.toString().slice(2)}</span>
-            </div>
-            <h2 className="font-display text-xl font-semibold">Ton année</h2>
-          </div>
-          
           <div className="glass rounded-2xl p-5">
             {yearSectionContent}
           </div>
@@ -139,16 +132,16 @@ export function HomeView({ games, onOpen }: Props) {
               onClick={() => onOpen(latestPlayingGame)}
             >
               <div className="flex gap-4">
-                <div className="w-16 shrink-0">
+                <div className="w-20 shrink-0">
                   <GameCover src={latestPlayingGame.cover} title={latestPlayingGame.title} className="h-full" />
                 </div>
-                <div className="flex min-w-0 flex-1 flex-col gap-2">
+                <div className="flex min-w-0 flex-1 flex-col gap-3">
                   <h3 className="font-display text-lg font-semibold leading-tight">
                     {latestPlayingGame.title}
                   </h3>
-                  <StatusBadge status={latestPlayingGame.status} className="text-xs px-2 py-0.5" />
+                  <StatusBadge status={latestPlayingGame.status} className="text-xs px-2 py-0.5 self-start" />
                   {latestPlayingGame.platforms && latestPlayingGame.platforms.length > 0 && (
-                    <p className="text-sm text-muted-foreground truncate">
+                    <p className="text-xs text-muted-foreground truncate">
                       {formatGamePlatforms(latestPlayingGame.platforms)}
                     </p>
                   )}
@@ -200,38 +193,6 @@ export function HomeView({ games, onOpen }: Props) {
         </section>
       )}
 
-      {/* 4. TA COLLECTION - jaquettes réduites */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Library className="size-5 text-muted-foreground" />
-            <h2 className="font-display text-xl font-semibold">Ta collection</h2>
-          </div>
-          <button
-            className="flex items-center gap-1 text-sm text-primary hover:underline"
-            onClick={() => {
-              // Navigation vers l'onglet Collection
-              const collectionTab = document.querySelector('[data-tab="library"]') as HTMLButtonElement
-              collectionTab?.click()
-            }}
-          >
-            Voir toute la collection
-            <ArrowRight className="size-3.5" />
-          </button>
-        </div>
-        
-        <div className="grid grid-cols-4 gap-2.5">
-          {collectionPreview.map(game => (
-            <div
-              key={game.id}
-              className="cursor-pointer transition-transform hover:scale-105 active:scale-95"
-              onClick={() => onOpen(game)}
-            >
-              <GameCover src={game.cover} title={game.title} />
-            </div>
-          ))}
-        </div>
-      </section>
     </div>
   )
 }

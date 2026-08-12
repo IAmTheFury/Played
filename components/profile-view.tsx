@@ -79,15 +79,22 @@ export function ProfileView({
 
   const recent = useMemo(
     () => {
-      // Ne prendre que les jeux avec playedAt défini
-      const gamesWithPlayedAt = games.filter(g => g.playedAt !== undefined)
+      // Prendre les jeux terminés ou notés (qui ont une expérience de jeu)
+      const gamesWithExperience = games.filter(g => 
+        g.status === 'completed' || g.rating !== undefined
+      )
       
-      // Si aucun jeu n'a playedAt, retourner tableau vide
-      if (gamesWithPlayedAt.length === 0) return []
+      // Si aucun jeu n'a d'expérience, retourner tableau vide
+      if (gamesWithExperience.length === 0) return []
       
-      // Trier par playedAt décroissant
-      return [...gamesWithPlayedAt]
-        .sort((a, b) => (b.playedAt ?? 0) - (a.playedAt ?? 0))
+      // Trier par date de jeu (playedAt) avec fallback sur updatedAt/createdAt
+      return [...gamesWithExperience]
+        .sort((a, b) => {
+          // Utiliser playedAt si disponible, sinon updatedAt, sinon createdAt
+          const dateA = a.playedAt ?? a.updatedAt ?? a.createdAt
+          const dateB = b.playedAt ?? b.updatedAt ?? b.createdAt
+          return dateB - dateA
+        })
         .slice(0, 6)
     },
     [games],
@@ -181,9 +188,9 @@ export function ProfileView({
       {/* Bannière profil */}
       <div className="relative -mx-4 overflow-hidden rounded-2xl">
         <div className="absolute inset-0">
-          {bannerGame?.cover && !bannerErrored ? (
+          {profileImage && !bannerErrored ? (
             <img
-              src={bannerGame.cover}
+              src={profileImage}
               alt=""
               aria-hidden
               onError={() => setBannerErrored(true)}
@@ -256,9 +263,6 @@ export function ProfileView({
                 label={completed > 1 ? 'terminés' : 'terminé'}
                 value={completed}
               />
-              {avg !== undefined && (
-                <Stat label="note moy." value={`${formatRating10(avg)}/10`} />
-              )}
             </div>
           </div>
         </div>

@@ -10,7 +10,7 @@ import { formatGamePlatforms } from '@/lib/platforms'
 import { STATUS_META, STATUS_ORDER, type Game, type GameStatus } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
-type Filter = 'all' | GameStatus
+type Filter = 'all' | GameStatus | 'favorite'
 
 export function LibraryView({
   games,
@@ -29,6 +29,7 @@ export function LibraryView({
       completed: 0,
       backlog: 0,
       abandoned: 0,
+      favorite: games.filter(g => g.favorite).length,
     }
     for (const g of games) c[g.status]++
     return c
@@ -42,7 +43,11 @@ export function LibraryView({
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     return games.filter((g) => {
-      if (filter !== 'all' && g.status !== filter) return false
+      if (filter === 'favorite') {
+        if (!g.favorite) return false
+      } else if (filter !== 'all' && g.status !== filter) {
+        return false
+      }
       if (!q) return true
       return (
         g.title.toLowerCase().includes(q) ||
@@ -51,7 +56,7 @@ export function LibraryView({
     })
   }, [games, query, filter])
 
-  const filters: Filter[] = ['all', ...STATUS_ORDER]
+  const filters: Filter[] = ['all', 'favorite', ...STATUS_ORDER]
 
   return (
     <div className="flex flex-col gap-6">
@@ -97,7 +102,7 @@ export function LibraryView({
         <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
           {filters.map((f) => {
           const active = filter === f
-          const label = f === 'all' ? 'Tous' : STATUS_META[f].short
+          const label = f === 'all' ? 'Tous' : f === 'favorite' ? 'Favoris' : STATUS_META[f].short
           const count = counts[f]
           const showCount = count > 0
           
@@ -114,7 +119,7 @@ export function LibraryView({
             >
               <span className={cn(
                 'size-1.5 rounded-full',
-                active ? 'bg-primary' : 'bg-muted-foreground/40'
+                active ? 'bg-primary' : f === 'favorite' ? 'bg-primary/60' : 'bg-muted-foreground/40'
               )} />
               {label}
               {showCount && (

@@ -111,7 +111,7 @@ export function GameDetailDialog({
                           })}
                         </div>
                         <span className="font-display text-sm font-bold tracking-tight text-primary ml-1.5">
-                          {formatRating10(game.rating)}
+                          {formatRating10(game.rating)}/10
                         </span>
                       </div>
                     </div>
@@ -158,7 +158,7 @@ export function GameDetailDialog({
                   <Trophy
                     className={cn('size-4', inRanking && 'text-primary')}
                   />
-                  {inRanking ? 'Dans le classement' : 'Classer'}
+                  {inRanking ? 'Dans mon top 4' : 'Ajouter à mon top 4'}
                 </Button>
                 <div className="ml-auto flex gap-2">
                   <Button
