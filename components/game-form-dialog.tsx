@@ -94,7 +94,6 @@ export function GameFormDialog({
 
   const platformChips = Array.from(
     new Set([
-      ...DEFAULT_PLATFORM_CHIPS,
       ...platforms,
       ...customPlatforms,
       ...(form.platforms ?? []),
@@ -226,24 +225,24 @@ export function GameFormDialog({
                         active
                           ? 'chip-active'
                           : 'text-muted-foreground hover:text-foreground',
-                        !isDefault && 'group-hover:pr-8'
+                        onRemovePlatform && 'group-hover:pr-8'
                       )}
                     >
                       {p}
                     </button>
-                    {!isDefault && onRemovePlatform && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onRemovePlatform(p)
-                        }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground/0 hover:text-destructive group-hover:text-muted-foreground/60 transition-all"
-                        aria-label={`Supprimer ${p}`}
-                      >
-                        <X className="size-3.5" />
-                      </button>
-                    )}
+                     {onRemovePlatform && (
+                       <button
+                         type="button"
+                         onClick={(e) => {
+                           e.stopPropagation()
+                           onRemovePlatform(p)
+                         }}
+                         className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground/0 hover:text-destructive group-hover:text-muted-foreground/60 transition-all"
+                         aria-label={`Supprimer ${p}`}
+                       >
+                         <X className="size-3.5" />
+                       </button>
+                     )}
                   </div>
                 )
               })}

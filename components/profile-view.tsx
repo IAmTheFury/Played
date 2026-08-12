@@ -87,13 +87,16 @@ export function ProfileView({
       // Si aucun jeu n'a d'expérience, retourner tableau vide
       if (gamesWithExperience.length === 0) return []
       
-      // Trier par date de jeu (playedAt) avec fallback sur updatedAt/createdAt
+      // Trier par année jouée (playedYear) décroissante, puis par date d'ajout (createdAt) décroissante
       return [...gamesWithExperience]
         .sort((a, b) => {
-          // Utiliser playedAt si disponible, sinon updatedAt, sinon createdAt
-          const dateA = a.playedAt ?? a.updatedAt ?? a.createdAt
-          const dateB = b.playedAt ?? b.updatedAt ?? b.createdAt
-          return dateB - dateA
+          // Priorité 1: année jouée (playedYear) - la plus récente d'abord
+          const yearA = a.playedYear ?? 0
+          const yearB = b.playedYear ?? 0
+          if (yearB !== yearA) return yearB - yearA
+          
+          // Si même année jouée: trier par date d'ajout (createdAt) - la plus récente d'abord
+          return b.createdAt - a.createdAt
         })
         .slice(0, 6)
     },
@@ -186,7 +189,7 @@ export function ProfileView({
   return (
     <div className="flex flex-col gap-8">
       {/* Bannière profil */}
-      <div className="relative -mx-4 overflow-hidden rounded-2xl">
+      <div className="relative -mx-4 overflow-hidden rounded-b-2xl">
         <div className="absolute inset-0">
           {profileImage && !bannerErrored ? (
             <img
@@ -199,10 +202,10 @@ export function ProfileView({
           ) : (
             <div className="h-full w-full bg-gradient-to-br from-primary/20 to-transparent" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#09090b]/60 to-[#09090b]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#09090b]/80 to-[#09090b]" />
         </div>
 
-        <div className="relative flex items-end gap-4 px-4 pb-5 pt-16">
+        <div className="relative flex items-end gap-4 px-4 pb-5 pt-24">
           <div 
             className="group relative flex size-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/60 font-display text-3xl font-bold text-primary-foreground shadow-lg shadow-primary/25 ring-2 ring-white/10 overflow-hidden cursor-pointer"
             onClick={() => fileInputRef.current?.click()}
@@ -366,7 +369,46 @@ export function ProfileView({
                   </div>
                   {g.rating !== undefined && (
                     <div className="self-start">
-                      <RatingBadge value={g.rating} />
+                      <div className="flex items-center gap-1 rounded-full bg-black/50 px-2 py-1 border border-white/10 backdrop-blur-md">
+                        <div className="flex items-center gap-0.5">
+                          {[1, 2, 3, 4, 5].map((i) => {
+                            const starValue = g.rating! / 2
+                            const filled = i <= starValue
+                            const halfFilled = i === Math.ceil(starValue) && starValue % 1 > 0.3
+                            
+                            return (
+                              <div key={i} className="relative size-2.5">
+                                {/* Fond vide */}
+                                <div className="absolute inset-0">
+                                  <div className={cn(
+                                    "size-2.5 rounded-[0.5px]",
+                                    "bg-white/20"
+                                  )} />
+                                </div>
+                                {/* Partie remplie */}
+                                {filled && (
+                                  <div className="absolute inset-0">
+                                    <div className="size-2.5 rounded-[0.5px] bg-primary" />
+                                  </div>
+                                )}
+                                {/* Demi-carré avec séparation claire */}
+                                {halfFilled && (
+                                  <>
+                                    <div className="absolute inset-0 overflow-hidden" style={{ width: '50%' }}>
+                                      <div className="size-2.5 rounded-[0.5px] bg-primary" />
+                                    </div>
+                                    {/* Ligne de séparation */}
+                                    <div className="absolute inset-0 left-1/2 w-[0.5px] bg-white/40" />
+                                  </>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                        <span className="text-[10px] font-bold tracking-tight text-white min-w-[12px] text-center ml-0.5">
+                          {g.rating}
+                        </span>
+                      </div>
                     </div>
                   )}
                 </div>

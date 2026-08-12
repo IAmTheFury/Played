@@ -142,7 +142,7 @@ export function LibraryView({
         <EmptyState hasGames={games.length > 0} />
       ) : (
         /* Grille de jaquettes - bibliothèque visuelle */
-        <div className="grid grid-cols-3 gap-2.5 sm:gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+        <div className="grid grid-cols-3 gap-2.5 sm:gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-5 xl:grid-cols-5">
           {filtered.map((g) => (
             <div key={g.id} className="group">
               <button
